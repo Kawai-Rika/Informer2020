@@ -7,25 +7,9 @@
 This is the origin Pytorch implementation of Informer in the following paper: 
 [Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting](https://arxiv.org/abs/2012.07436). Special thanks to `Jieqi Peng`@[cookieminions](https://github.com/cookieminions) for building this repo.
 
-**News**: Our Informer paper has been awarded [AAAI'21 Best Paper](https://www.business.rutgers.edu/news/hui-xiong-and-research-colleagues-receive-aaai-best-paper-award)! Thanks for all your attention! We will continue this line of research and update on this repo. Please star this repo and cite our paper if you find our work is helpful for you:
+:triangular_flag_on_post:**News**: We provide [Colab Examples](#colablink) for friendly usage.
 
-```
-@inproceedings{haoyietal-informer-2021,
-  author    = {Haoyi Zhou and
-               Shanghang Zhang and
-               Jieqi Peng and
-               Shuai Zhang and
-               Jianxin Li and
-               Hui Xiong and
-               Wancai Zhang},
-  title     = {Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting},
-  booktitle = {The Thirty-Fifth {AAAI} Conference on Artificial Intelligence, {AAAI} 2021},
-  pages     = {online},
-  publisher = {{AAAI} Press},
-  year      = {2021},
-}
-```
-
+:triangular_flag_on_post:**News**: Our Informer paper has been awarded [AAAI'21 Best Paper](https://www.business.rutgers.edu/news/hui-xiong-and-research-colleagues-receive-aaai-best-paper-award)! We will continue this line of research and update on this repo. Please star this repo and cite our paper if you find our work is helpful for you.
 
 <p align="center">
 <img src=".\img\informer.png" height = "360" alt="" align=center />
@@ -69,6 +53,9 @@ The required data files should be put into `data/ETT/` folder. A demo slice of t
 
 
 ## Usage
+<span id="colablink">Colab Examples:</span> We provide google colabs to help reproducing and customing our repo, which includes `experiments(train and test)`, `prediction`, `visualization` and `custom data`.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1_X7O2BkFLvqyCdZzDZvV2MB0aAvYALLC)
+
 Commands for training and testing the model with *ProbSparse* self-attention on Dataset ETTh1, ETTh2 and ETTm1 respectively:
 
 ```bash
@@ -101,7 +88,7 @@ More parameter information please refer to `main_informer.py`.
 
 
 ## FAQ
-If you run into a problem like `RuntimeError: The size of tensor a (98) must match the size of tensor b (96) at non-singleton dimension 1`, you can check torch version or modify code about `Conv1d` of `TokenEmbedding` in `models/embed.py` as the way of circular padding mode in Conv1d changed in different torch version.
+If you run into a problem like `RuntimeError: The size of tensor a (98) must match the size of tensor b (96) at non-singleton dimension 1`, you can check torch version or modify code about `Conv1d` of `TokenEmbedding` in `models/embed.py` as the way of circular padding mode in Conv1d changed in different torch versions.
 
 
 ## Citation

@@ -1,6 +1,6 @@
-from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute
+from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom
 from exp.exp_basic import Exp_Basic
-from models.model import Informer
+from models.model import Informer, InformerStack
 
 from utils.tools import EarlyStopping, adjust_learning_rate
 from utils.metrics import metric
@@ -25,8 +25,9 @@ class Exp_Informer(Exp_Basic):
     def _build_model(self):
         model_dict = {
             'informer':Informer,
+            'informerstack':InformerStack,
         }
-        if self.args.model=='informer':
+        if self.args.model=='informer' or self.args.model=='informerstack':
             model = model_dict[self.args.model](
                 self.args.enc_in,
                 self.args.dec_in, 
@@ -43,8 +44,10 @@ class Exp_Informer(Exp_Basic):
                 self.args.dropout, 
                 self.args.attn,
                 self.args.embed,
-                self.args.data[:-1],
+                self.args.freq,
                 self.args.activation,
+                self.args.output_attention,
+                self.args.distil,
                 self.device
             )
         
@@ -57,8 +60,11 @@ class Exp_Informer(Exp_Basic):
             'ETTh1':Dataset_ETT_hour,
             'ETTh2':Dataset_ETT_hour,
             'ETTm1':Dataset_ETT_minute,
+            'ETTm2':Dataset_ETT_minute,
+            'custom':Dataset_Custom,
         }
         Data = data_dict[self.args.data]
+        timeenc = 0 if args.embed!='timeF' else 1
 
         if flag == 'test':
             shuffle_flag = False; drop_last = True; batch_size = args.batch_size
@@ -70,7 +76,10 @@ class Exp_Informer(Exp_Basic):
             data_path=args.data_path,
             flag=flag,
             size=[args.seq_len, args.label_len, args.pred_len],
-            features=args.features
+            features=args.features,
+            target=args.target,
+            timeenc=timeenc,
+            freq=args.freq
         )
         print(flag, len(data_set))
         data_loader = DataLoader(
@@ -104,8 +113,12 @@ class Exp_Informer(Exp_Basic):
             dec_inp = torch.zeros_like(batch_y[:,-self.args.pred_len:,:]).double()
             dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).double().to(self.device)
             # encoder - decoder
-            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            batch_y = batch_y[:,-self.args.pred_len:,:].to(self.device)
+            if self.args.output_attention:
+                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+            else:
+                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+            f_dim = -1 if self.args.features=='MS' else 0
+            batch_y = batch_y[:,-self.args.pred_len:,f_dim:].to(self.device)
 
             pred = outputs.detach().cpu()
             true = batch_y.detach().cpu()
@@ -154,9 +167,13 @@ class Exp_Informer(Exp_Basic):
                 dec_inp = torch.zeros_like(batch_y[:,-self.args.pred_len:,:]).double()
                 dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).double().to(self.device)
                 # encoder - decoder
-                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                if self.args.output_attention:
+                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+                else:
+                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
 
-                batch_y = batch_y[:,-self.args.pred_len:,:].to(self.device)
+                f_dim = -1 if self.args.features=='MS' else 0
+                batch_y = batch_y[:,-self.args.pred_len:,f_dim:].to(self.device)
                 loss = criterion(outputs, batch_y)
                 train_loss.append(loss.item())
                 
@@ -207,8 +224,12 @@ class Exp_Informer(Exp_Basic):
             dec_inp = torch.zeros_like(batch_y[:,-self.args.pred_len:,:]).double()
             dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).double().to(self.device)
             # encoder - decoder
-            outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
-            batch_y = batch_y[:,-self.args.pred_len:,:].to(self.device)
+            if self.args.output_attention:
+                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+            else:
+                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+            f_dim = -1 if self.args.features=='MS' else 0
+            batch_y = batch_y[:,-self.args.pred_len:,f_dim:].to(self.device)
             
             pred = outputs.detach().cpu().numpy()#.squeeze()
             true = batch_y.detach().cpu().numpy()#.squeeze()
